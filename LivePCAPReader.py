@@ -7,6 +7,7 @@ import time
 import re
 import os
 import struct
+import threading
 
 
 script, filename = argv;
@@ -60,7 +61,14 @@ class DataContainer:
             self.pktLoss = self.pktLoss;
 
 
-
+def prbs9(state = 0x1ff):
+    while True:
+        for i in range(8):
+            if bool(state & 0x10) ^ bool(state & 0x100):
+                state = ((state & 0xff) << 1) | 1
+            else:
+                state = (state & 0xff) << 1
+        yield state & 0xff
 
 
 def parse_packet(pkt):
@@ -77,7 +85,8 @@ def parse_packet(pkt):
 
 # Parse packet from FPGA that has number of good packets received info & returns tuple
 # containing this information = ( start sequence, number of packets following sequence )
-def my_parse_packet(pkt):
+# Note that these packets are of ethtype 0x8091
+def parse_8091_packet(pkt):
     # pkt comes in as byte per hex value
 
     pktData = str(pkt);
@@ -85,6 +94,10 @@ def my_parse_packet(pkt):
     #print pkt;
     #print pktData;
     #hexdump(pkt);
+
+    # Prevent error in case corrupted packet (a good packet will be 60 bytes)
+    if (len(pktData) > 60 ):
+        return None;
 
     i = 0;
 
@@ -95,7 +108,18 @@ def my_parse_packet(pkt):
         if v[1] > 0:
             return v;
 
+def parse_8092_packet(pkt):
 
+    gen = prbs9(); # Check packet data against this, bitwise;
+    data = pkt[15:]
+
+
+def get_packet_protocol(pkt):
+    pktInfo = str(pkt);
+
+    protocol = pktInfo[12].encode('hex') + pktInfo[13].encode('hex');
+
+    return protocol;
 
 
 
@@ -106,7 +130,7 @@ def processPkt (pkt, container):
     # Display part
     #print( pkt.summary() );
     # print( pkt.show() );
-    time.sleep(0.5);
+    time.sleep(0.01);
     #hexdump(pkt)
 
     #if pkt.getLayer(Raw).load is not None:
@@ -131,49 +155,66 @@ def processPkt (pkt, container):
 
     #print parse_packet(pkt);
 
-    info =  my_parse_packet(pkt);
-    container.fillPktInfo(info);
+    etherproto = get_packet_protocol(pkt);
 
+    if (etherproto == '8091'):
+        info = parse_8091_packet(pkt);
 
+        # Prevent analysis on bad packet
+        if info != None:
+            container.fillPktInfo(info);
 
-# To start it off
-pkts = rdpcap(filename);
-outpkts = [];
-start = 0;
-end = len(pkts)-1;
-
-
-# Create data container class to record information
-metaData = DataContainer();
-
-while 1:
-    while( start <= end ):
-        # Do parsing right here....
-        #outpkts.append(pkts[start]);
-        #print( "Packet: %s" % (pkts[start])[0][1].src);
-        # DO SOMETHING
-        #(pkts[start])[0][1].show();
-
-        lastSQ = metaData.seqNum;
-
-        # Updates metaData from previous call
-        processPkt(pkts[start], metaData);
-
-        #metaData.getPktLoss(lastSQ, metaData.seqNum);
+    elif (etherproto == '8092'):
+        parse_8092_packet(pkt);
 
 
 
 
-        start += 1; # Required for looping
-
-        # Real time data printing
-        metaData.printInfo();
-
-
-
-    # Update start & end to include newly generated packets in log file
-    pkts = rdpcap(filename); # Open updated
-    start = end;
+def RunPCAPRead (filename):
+    # To start it off
+    pkts = rdpcap(filename);
+    outpkts = [];
+    start = 0;
     end = len(pkts)-1;
 
 
+    # Create data container class to record information
+    metaData = DataContainer();
+
+    while 1:
+        while( start <= end ):
+            # Do parsing right here....
+            #outpkts.append(pkts[start]);
+            #print( "Packet: %s" % (pkts[start])[0][1].src);
+            # DO SOMETHING
+            #(pkts[start])[0][1].show();
+
+            lastSQ = metaData.seqNum;
+
+            # Updates metaData from previous call
+            processPkt(pkts[start], metaData);
+
+            #metaData.getPktLoss(lastSQ, metaData.seqNum);
+
+
+
+
+            start += 1; # Required for looping
+
+            # Real time data printing
+            #metaData.printInfo();
+
+
+
+        # Update start & end to include newly generated packets in log file
+        pkts = rdpcap(filename); # Open updated
+        start = end;
+        end = len(pkts)-1;
+
+def StartPCAPReadDaemon(logfile):
+    readThread = threading.Thread( target=RunPCAPRead, kwargs=dict(filename=logfile) );
+    readThread._stop = threading.Event();
+    readThread.start();
+    time.sleep(1);
+
+RunPCAPRead(filename);
