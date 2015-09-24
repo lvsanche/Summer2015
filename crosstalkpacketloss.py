@@ -1,5 +1,9 @@
 #Packetloss measurement with the FPGA + OSA crosstalk reading on new switch
 from structureFiling import *
+import LivePCAPReader as PCAPReader
+from sys import argv
+
+script, filename = argv;
 
 def main():
 
@@ -73,12 +77,16 @@ def main():
 				#oscopeTraces.writerow(['Attenuation level: %i Port Num: %i Trace:'%(att, port) , otrace ])
 
 
-				#here will go the packetloss things 
- 			att = att+5
- 		break
- 	Osa.closeOutputs()	
- 	Oscope.closeOutputs()
- 	Atte.closeOutputs()
+				#here will go the packetloss things
+				PCAPReader.StartPCAPReadDaemon(filename);
+
+
+
+			att = att+5
+		break
+	Osa.closeOutputs()
+	Oscope.closeOutputs()
+	Atte.closeOutputs()
 
 
 main()
