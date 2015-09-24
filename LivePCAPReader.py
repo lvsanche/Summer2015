@@ -8,6 +8,7 @@ import re
 import os
 import struct
 import threading
+import binascii
 
 
 script, filename = argv;
@@ -111,8 +112,36 @@ def parse_8091_packet(pkt):
 def parse_8092_packet(pkt):
 
     gen = prbs9(); # Check packet data against this, bitwise;
-    data = pkt[15:]
+    output = [];
 
+    pktinfo = (pkt[0]); # All packet data is contained in first index
+    #data = str(pktinfo)[14:len(pktinfo)].encode('hex'); # Convert to hex
+    #bindata = binascii.unhexlify(data); #Convert to binary <--convert to int?
+    #print type(bindata);
+    #print type(pktinfo);
+
+
+
+    #print data.encode('hex') + '\n';
+
+
+    #print bindata;
+    #print ( (int(bindata)&gen) );
+
+    """
+    try:
+        while True:
+            item = next(gen);
+            # Do stuff
+            output.append( ( int(bindata)&item)|(~int(bindata)&~item) );
+    except StopIteration:
+        pass
+    finally:
+        del gen;
+
+    print output;
+    #print bindata + '\n';
+    """
 
 def get_packet_protocol(pkt):
     pktInfo = str(pkt);
@@ -202,7 +231,7 @@ def RunPCAPRead (filename):
             start += 1; # Required for looping
 
             # Real time data printing
-            #metaData.printInfo();
+            metaData.printInfo();
 
 
 
