@@ -1,6 +1,7 @@
 import visa
 import ivi
 import time
+from structureFiling import *
 #import the scapy module
 
 def main():
@@ -15,8 +16,8 @@ def main():
 	attenuationStep= 1 #0 #in dB, to be the increment
 
 	#READING IN CONFIG:
-	"""inputArgs = str(sys.argv)
-	fileObj = open( inputArgs[1], 'r')
+	
+	fileObj = open( "config.txt", 'r')
 	#file will be in the same sequence as in the variables
 	attenuation = float(fileObj.readline())
 	attMin = float(fileObj.readline())
@@ -24,7 +25,7 @@ def main():
 	offset = float(fileObj.readline())
 	wavelength = float(fileObj.readline())
 	attenuationStep = float(fileObj.readline())
-	fileObj.close()"""
+	fileObj.close()
 
 	#once done it is time to set up the attunuator with the driver
 	att = ivi.agilent.agilent8156A("TCPIP::192.168.1.201::gpib0,28::INSTR") 
@@ -48,6 +49,40 @@ def main():
 			break
 
 
-main()
+#main()
 #still need to send out the scapy information into some background saving system
+
+
+def packetloss_2015_9_28():
+
+
+	#VARIABLES:
+	attMin = 0
+	attMax = 20#0
+	attenuationStep= 1 #0 #in dB, to be the increment
+
+
+	#making the directory:
+	directory = creating_direc("packetloss_2015_9_28+attenuation")
+
+	att = DataCollector_agilent8156A("TCPIP::192.168.1.201::gpib0,28::INSTR", directory) 
+	oscop = DataCollector_agilent91304A("TCPIP::192.168.1.202::INSTR", directory)	
+	
+	att.configFromFile()
+	att.openFile("METADATA")
+
+
+	for atten in range(attMin, attMax, attenuationStep):
+		att.commandSender("set:attenuation %i" %atten)
+
+		outputWriter = oscop.openFile("att_%i_trace" %atten, 0 )
+		oscop.getTrace(0,outputWriter)
+
+		#bit error rate thing after we get a trace 
+		#might need to have some csv writer here to get a file with the bit error numbers just to keep
+
+		oscop.closeOutputs() #so that the file is closed correctly 
+
+	att.closeOutputs()
+	
 
