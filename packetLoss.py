@@ -66,23 +66,36 @@ def packetloss_2015_9_28():
 	directory = creating_direc("packetloss_2015_9_28+attenuation")
 
 	att = DataCollector_agilent8156A("TCPIP::192.168.1.201::gpib0,28::INSTR", directory) 
-	oscop = DataCollector_agilent91304A("TCPIP::192.168.1.202::INSTR", directory)	
+	oscope = DataCollector_agilentDSA91304A("TCPIP::192.168.1.202::INSTR", directory)	
 	
-	att.configFromFile()
+#	att.configFromFile() #a file must exist and it must be called atteConfig
 	att.openFile("METADATA")
 
 
-	for atten in range(attMin, attMax, attenuationStep):
-		att.commandSender("set:attenuation %i" %atten)
-
-		outputWriter = oscop.openFile("att_%i_trace" %atten, 0 )
-		oscop.getTrace(0,outputWriter)
-
+	att.commandSender("set:attenuation 0.0")
+        oscope.commandSender(':acquire:srate max')
+        oscope.commandSender(':timebase:range 1.6E-3')
+	outputWriter = oscope.openFile("att_0dB_trace_channel1", 0 )
+        
+        oscope.getTrace(0,outputWriter)
+        print("Trace for channel 1, 0dB has been captured")
+        outputWriter = oscope.openFile("att_0dB_trace_channel2", 1 )
+        oscope.getTrace(1,outputWriter)
+        print("Trace for channel 2, 0dB has been captured")
+        print("attenuation setting should now be 19dB")
+        att.commandSender("set:attenuation 19.0")        
+	outputWriter = oscope.openFile("att_19dB_trace_channel1",0)
+        oscope.getTrace(0, outputWriter)
+        print("Trace for channel 1, 19dB has been captured ")
+        outputWriter = oscope.openFile("att_19dB_trace_channel2",1)
+        oscope.getTrace(1, outputWriter)
+        print("Trace for channel 2, 19dB has been captured")
 		#bit error rate thing after we get a trace 
 		#might need to have some csv writer here to get a file with the bit error numbers just to keep
 
-		oscop.closeOutputs() #so that the file is closed correctly 
+	oscope.closeOutputs() #so that the file is closed correctly 
 
 	att.closeOutputs()
 	
 
+packetloss_2015_9_28()

@@ -49,9 +49,9 @@ class DataCollector_agilent8156A:
 
 	def configFromFile(self):
 		attConF = open('atteConfig', 'r')
-		attenuation = int(attConF.readline().split(' #')[0])
-		wavelength = int(attConF.readline().split(' #')[0])
-		offset = int(attConF.readline().split(' #')[0])
+		attenuation = float(attConF.readline().split(' #')[0])
+		wavelength = float(attConF.readline().split(' #')[0])
+		offset = float(attConF.readline().split(' #')[0])
 		attConf.close()
 		self.driver._set_attenuation(attenuation)
 		self.driver._set_wavelength(wavelength)
