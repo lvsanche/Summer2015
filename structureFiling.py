@@ -257,12 +257,12 @@ class DataCollector_agilentDSA91304A:
 
 		#Time to list all the things to appear in the meta data header,
 		#This will include the name of the .set file that will include the whole config
-		self.driver._write(':disk:save:setup %s' %measurementToRecord)
-		fileWriter.writerow(["NAME OF .SET FILE %s.set" %measurementToRecord])
-		fileWriter.writerow(["TimeBase Range:", self.driver._ask(':TIMebase:RANGe?') ])
-		fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
-		fileWriter.writerow(["Number of Points:", self.driver._ask(':waveform:points?')])
-		fileWriter.writerow(["END OF META DATA"])
+		#self.driver._write(':disk:save:setup %s' %measurementToRecord)
+		#fileWriter.writerow(["NAME OF .SET FILE %s.set" %measurementToRecord])
+		#fileWriter.writerow(["TimeBase Range:", self.driver._ask(':TIMebase:RANGe?') ])
+		#fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
+		#fileWriter.writerow(["Number of Points:", self.driver._ask(':waveform:points?')])
+		#fileWriter.writerow(["END OF META DATA"])
 		
 
 		return fileWriter
@@ -291,6 +291,19 @@ class DataCollector_agilentDSA91304A:
 		filePic.write(img)
 		filePic.close()
 		print("Screen shot captured")
+
+
+	def setHistogram(self, llim, rlim, tlim, blim):
+		self.commandSender(':histogram:mode measurement')
+		self.commandSender(':histogram:llimit %s' %llim)
+		self.commandSender(':histogram:rlimit %s' %rlim)
+		self.commandSender(':histogram:tlimit %s' %tlim)
+		self.commandSender(':histogram:blimit %s' %blim)
+		print "Window for histogram is set"
+
+	def saveQFactor(self, attnLvl, fileWriter):
+		val = self.driver._ask(':MEASure:CGRade:QFACtor?')
+		fileWriter.writerow(["Atten: %i" %attnLvl, "QFactor: %f " %val])
 
 	"""
 	This method will set the wavelength to be as big as possible in the screen

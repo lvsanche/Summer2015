@@ -29,7 +29,7 @@ def main():
 
 	#atte will not collect data so it will just be meta data
 	atteFile = Atte.openFile('NoData')
-
+	qfactorFile = Oscope.openFile('Color_QFactor')
 	osaFile4Peaks = Osa.openFile('4Peaks_data')
 
 	#make the measurements for the four peaks
@@ -45,10 +45,12 @@ def main():
 			peaks = Osa.findPeaks()
 			osaFile4Peaks.writerow(['Attenuation level: %i Port Num: %i Peaks: '%(att, port) , peaks ])
 
-			outputWriter = oscope.openFile("att_0dB_trace_Port%i" %port,0)
-			Oscope.getTrace(0, outputWriter)
-			print "Time to iterate through attenuation "
+			
 			while(att < 23):
+				Oscope.driver._write('display:cgrade on') #turns on the color grading, resetting in some cases
+				#Both histogram box
+				Oscope.setHistogram("1015.89 E-6", , tlim, blim)
+
 
 				#insert the bert things here 
 				att = att + 3
