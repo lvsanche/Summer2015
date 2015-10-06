@@ -12,7 +12,7 @@ def main():
 	osa = DataCollector_agilent86142B("TCPIP::192.168.1.201::gpib0,27::INSTR", directory)
 	switch = ivi.dicon.diconGP700("TCPIP::192.168.1.201::gpib0,3::INSTR")
 
-	osaFileCrossPeaks = osa.openFile('crosstalkPeaks') #call this so you know what measurement was made with this instrument
+	osaFileCrossPeaks = osa.openFile('Peaks') #call this so you know what measurement was made with this instrument
 	osaFileCrossPeaks.writerow(['# Outputs: 1 2 3 4'])
 		
 	inputVal = 0

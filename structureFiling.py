@@ -257,10 +257,10 @@ class DataCollector_agilentDSA91304A:
 
 		#Time to list all the things to appear in the meta data header,
 		#This will include the name of the .set file that will include the whole config
-		self.driver._write(':disk:save:setup %s' %measurementToRecord)
+		self.driver._write(':disk:save:setup "%s"' %measurementToRecord)
 		fileWriter.writerow(["NAME OF .SET FILE %s.set" %measurementToRecord])
 		fileWriter.writerow(["TimeBase Range:", self.driver._ask(':TIMebase:RANGe?') ])
-		fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
+		#fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
 		fileWriter.writerow(["END OF META DATA"])
 		
 
@@ -334,11 +334,13 @@ class DataCollector_agilentDSA91304A:
 		self.logFileWriter.writerow(['%s- Command: %s' %(time.strftime("%H:%M:%S"),str(command) )])
 
 
-	def getTrace(self, inputChannel, nameOfFile):
+	def getTrace(self, inputChannel, fileWriter):
 		trace = self.driver._measurement_fetch_waveform(inputChannel)
-		f = open(nameOfFile, 'w')
-		f.write(trace)
-		f.close()
+		print("The trace has been fetched, now time to output it")
+		#f.write(trace)
+		#f.close()
+                fileWriter.writerows(trace)
+                print("Writing file completed")
 	"""
 	This simple method should be called at the end when the instrument is not to be used any longer
 	as it closes out all the files which if done incorrectly might result in unwritten files

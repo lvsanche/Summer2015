@@ -65,7 +65,7 @@ def packetloss_2015_9_28():
 	#making the directory:
 	directory = creating_direc("packetloss_2015_9_28+attenuation")
 
-	att = DataCollector_agilent8156A("TCPIP::192.168.1.201::gpib0,28::INSTR", directory) 
+	att = DataCollector_agilent8156A("TCPIP::192.168.1.201::gpib0,29::INSTR", directory) 
 	oscope = DataCollector_agilentDSA91304A("TCPIP::192.168.1.202::INSTR", directory)	
 	
 #	att.configFromFile() #a file must exist and it must be called atteConfig
@@ -74,7 +74,7 @@ def packetloss_2015_9_28():
 
 	att.commandSender("set:attenuation 0.0")
         oscope.commandSender(':acquire:srate max')
-        oscope.commandSender(':timebase:range 1.6E-3')
+        oscope.commandSender(':timebase:range 1E-3')
 	outputWriter = oscope.openFile("att_0dB_trace_channel1", 0 )
         
         oscope.getTrace(0,outputWriter)
