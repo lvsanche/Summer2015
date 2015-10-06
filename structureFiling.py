@@ -14,8 +14,8 @@ import csv
 def creating_direc(methodName):
 	#look for experimentname + date folder 
 	date = time.strftime("%Y_%m_%d")
-	clock = time.strftime("%H:%M:%S")
-	dire = "./%s/%s/trial_%s/" %(methodName, date, clock)
+	clock = time.strftime("%H_%M_%S")
+	dire = "./%s/%s/%s_trial/" %(methodName, date, clock)
 	
    	d = os.path.dirname(dire)
    	if not os.path.exists(d):
@@ -257,11 +257,20 @@ class DataCollector_agilentDSA91304A:
 
 		#Time to list all the things to appear in the meta data header,
 		#This will include the name of the .set file that will include the whole config
+<<<<<<< HEAD
 		self.driver._write(':disk:save:setup "%s"' %measurementToRecord)
 		fileWriter.writerow(["NAME OF .SET FILE %s.set" %measurementToRecord])
 		fileWriter.writerow(["TimeBase Range:", self.driver._ask(':TIMebase:RANGe?') ])
 		#fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
 		fileWriter.writerow(["END OF META DATA"])
+=======
+		#self.driver._write(':disk:save:setup %s' %measurementToRecord)
+		#fileWriter.writerow(["NAME OF .SET FILE %s.set" %measurementToRecord])
+		#fileWriter.writerow(["TimeBase Range:", self.driver._ask(':TIMebase:RANGe?') ])
+		#fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
+		#fileWriter.writerow(["Number of Points:", self.driver._ask(':waveform:points?')])
+		#fileWriter.writerow(["END OF META DATA"])
+>>>>>>> 4d43f1adead238f2a7aeaed64c39617efca3c550
 		
 
 		return fileWriter
@@ -290,6 +299,19 @@ class DataCollector_agilentDSA91304A:
 		filePic.write(img)
 		filePic.close()
 		print("Screen shot captured")
+
+
+	def setHistogram(self, llim, rlim, tlim, blim):
+		self.commandSender(':histogram:mode measurement')
+		self.commandSender(':histogram:llimit %s' %llim)
+		self.commandSender(':histogram:rlimit %s' %rlim)
+		self.commandSender(':histogram:tlimit %s' %tlim)
+		self.commandSender(':histogram:blimit %s' %blim)
+		print "Window for histogram is set"
+
+	def saveQFactor(self, attnLvl, fileWriter):
+		val = self.driver._ask(':MEASure:CGRade:QFACtor?')
+		fileWriter.writerow(["Atten: %i" %attnLvl, "QFactor: %f " %val])
 
 	"""
 	This method will set the wavelength to be as big as possible in the screen
@@ -336,11 +358,17 @@ class DataCollector_agilentDSA91304A:
 
 	def getTrace(self, inputChannel, fileWriter):
 		trace = self.driver._measurement_fetch_waveform(inputChannel)
+<<<<<<< HEAD
 		print("The trace has been fetched, now time to output it")
 		#f.write(trace)
 		#f.close()
                 fileWriter.writerows(trace)
                 print("Writing file completed")
+=======
+		#f = open(nameOfFile, 'w')
+		fileWriter.writerows(str(trace))
+		
+>>>>>>> 4d43f1adead238f2a7aeaed64c39617efca3c550
 	"""
 	This simple method should be called at the end when the instrument is not to be used any longer
 	as it closes out all the files which if done incorrectly might result in unwritten files
@@ -349,3 +377,14 @@ class DataCollector_agilentDSA91304A:
 	def closeOutputs(self):
 		for writer in self.outputFiles:
 			writer.close()
+
+"""
+	This file writer will help make the writer we need in order to output more files 
+	in the same directory, this shall be used when there is no automatic data acquisition
+	"""
+def fileWriter(direc, nameOfFile):
+	nameOfFile = direc+nameOfFile
+	file = open(nameOfFile, 'wb')
+	fileWriter = csv.writer(file, quotechar ='|', quoting=csv.QUOTE_MINIMAL)
+	return fileWriter
+
