@@ -14,13 +14,17 @@ def main():
 	#might not need this since we can save the configuration of the osa
 
 	#now time to make the file system:
-	directory = creating_direc('crosstalk&packetloss')
+	directory = creating_direc('crosstalk_packetloss061015')
 
 	
 
 	#first making the driver wrappers
 	Atte = DataCollector_agilent8156A("TCPIP::192.168.1.201::gpib0,29::INSTR", directory)
+<<<<<<< HEAD
 #	Osa = DataCollector_agilent86142B("TCPIP::192.168.1.201::gpib0,27::INSTR", directory)
+=======
+	#Osa = DataCollector_agilent86142B("TCPIP::192.168.1.201::gpib0,27::INSTR", directory)
+>>>>>>> b53eb4e43e7e47422d95a450225b4aabcd58120e
 
 	#Now the driver for everything else:
 #	D_sw = ivi.dicon.diconGP700("TCPIP::192.168.1.201::gpib0,3::INSTR")#this is the dicon switch
@@ -36,38 +40,51 @@ def main():
 	inputVal = "G"
 	while(inputVal != "E"):
 		inputVal = raw_input("To (G)o, To (E)xit: ")
-		att = 0
+		att = 0 #min attenuation
 		Atte.commandSender('input:attenuation %i' %att)
 
 		if (inputVal == "G"):
 			port = raw_input("What channel is the data input? (1-4)")
+<<<<<<< HEAD
 #			print "Getting the four peaks..."
 #			peaks = Osa.findPeaks()
 #			osaFile4Peaks.writerow(['Attenuation level: %i Port Num: %i Peaks: '%(att, port) , peaks ])
 
 			
 			while(att < 3):
+=======
+			#print "Getting the four peaks..."
+			#peaks = Osa.findPeaks()
+			#osaFile4Peaks.writerow(['Attenuation level: %i Port Num: %i Peaks: '%(att, port) , peaks ])
+
+			
+			while(att < 23): #here is the max attenuation 
+>>>>>>> b53eb4e43e7e47422d95a450225b4aabcd58120e
 				Oscope.driver._write('display:cgrade on') #turns on the color grading, resetting in some cases
 				#Both histogram box
-				Oscope.setHistogram("1.01589 E-9", "1.02478 E-9", "355.16 E-6", "-351.29 E-6")
+				Oscope.setHistogram("1.01589E-9", "1.02478E-9", "355.16E-3", "-351.29E-3")
 				Oscope.captureScreenShot("hist_both_att_%i" %att)
 				#For the top Box now
-				Oscope.setHistogram("1.01589 E-9", "1.02478 E-9", "355.16 E-6", "222.90 E-6")
+				Oscope.setHistogram("1.01589E-9", "1.02478E-9", "355.16E-3", "222.90E-3")
 				Oscope.captureScreenShot("hist_top_att_%i" %att)
 				#For the bottom box now
-				Oscope.setHistogram("1.01589 E-9", "1.02478 E-9", "-212.58 E-6", "-351.29 E-6")
+				Oscope.setHistogram("1.01589E-9", "1.02478E-9", "-212.58E-3", "-351.29E-3")
 				Oscope.captureScreenShot("hist_bottm_att_%i" %att)
 
 				#now to get the qfactor
 				Oscope.saveQFactor(att, qfactorFile)
 
 
-				
+
 				#insert the bert things here 
-				att = att + 3
+				att = att + 3 # here is the step 
 				Atte.commandSender('input:attenuation %i' %att)
 
+<<<<<<< HEAD
 #	Osa.closeOutputs()
+=======
+	#Osa.closeOutputs()
+>>>>>>> b53eb4e43e7e47422d95a450225b4aabcd58120e
 	Oscope.closeOutputs()
 	Atte.closeOutputs()
 

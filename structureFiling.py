@@ -288,20 +288,26 @@ class DataCollector_agilentDSA91304A:
 	"""
 	def captureScreenShot(self, titleOfScreenshot):
 		img = self.driver._display_fetch_screenshot()
+<<<<<<< HEAD
 		filePic = open(titleOfScreenshot,'w')
 		time.sleep(2)
                 filePic.write(img)
                 time.sleep(2)
+=======
+		filePic = open(self.directory+titleOfScreenshot+".jpg",'w')
+		filePic.write(img)
+>>>>>>> b53eb4e43e7e47422d95a450225b4aabcd58120e
 		filePic.close()
 		print("Screen shot captured")
 
 
 	def setHistogram(self, llim, rlim, tlim, blim):
+		self.commandSender(':histogram:mode off')
 		self.commandSender(':histogram:mode measurement')
-		self.commandSender(':histogram:llimit %s' %llim)
-		self.commandSender(':histogram:rlimit %s' %rlim)
-		self.commandSender(':histogram:tlimit %s' %tlim)
-		self.commandSender(':histogram:blimit %s' %blim)
+		self.commandSender(':histogram:window:llimit %s' %llim)
+		self.commandSender(':histogram:window:rlimit %s' %rlim)
+		self.commandSender(':histogram:window:tlimit %s' %tlim)
+		self.commandSender(':histogram:window:blimit %s' %blim)
 		print "Window for histogram is set"
 
 	def saveQFactor(self, attnLvl, fileWriter):
