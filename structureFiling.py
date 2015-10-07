@@ -256,21 +256,14 @@ class DataCollector_agilentDSA91304A:
 		self.outputFiles.append(file)
 
 		#Time to list all the things to appear in the meta data header,
-		#This will include the name of the .set file that will include the whole config
-<<<<<<< HEAD
-		self.driver._write(':disk:save:setup "%s"' %measurementToRecord)
-		fileWriter.writerow(["NAME OF .SET FILE %s.set" %measurementToRecord])
-		fileWriter.writerow(["TimeBase Range:", self.driver._ask(':TIMebase:RANGe?') ])
-		#fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
-		fileWriter.writerow(["END OF META DATA"])
-=======
+		#This will include the name if the .set file that will include the whole config
+		
 		#self.driver._write(':disk:save:setup %s' %measurementToRecord)
 		#fileWriter.writerow(["NAME OF .SET FILE %s.set" %measurementToRecord])
 		#fileWriter.writerow(["TimeBase Range:", self.driver._ask(':TIMebase:RANGe?') ])
 		#fileWriter.writerow(["Channel Range:", self.driver._ask(':channel%s:range?' %channelValue)])
 		#fileWriter.writerow(["Number of Points:", self.driver._ask(':waveform:points?')])
 		#fileWriter.writerow(["END OF META DATA"])
->>>>>>> 4d43f1adead238f2a7aeaed64c39617efca3c550
 		
 
 		return fileWriter
@@ -296,7 +289,9 @@ class DataCollector_agilentDSA91304A:
 	def captureScreenShot(self, titleOfScreenshot):
 		img = self.driver._display_fetch_screenshot()
 		filePic = open(titleOfScreenshot,'w')
-		filePic.write(img)
+		time.sleep(2)
+                filePic.write(img)
+                time.sleep(2)
 		filePic.close()
 		print("Screen shot captured")
 
@@ -311,7 +306,7 @@ class DataCollector_agilentDSA91304A:
 
 	def saveQFactor(self, attnLvl, fileWriter):
 		val = self.driver._ask(':MEASure:CGRade:QFACtor?')
-		fileWriter.writerow(["Atten: %i" %attnLvl, "QFactor: %f " %val])
+		fileWriter.writerow(["Atten: %i" %attnLvl, "QFactor: %s " %str(val)])
 
 	"""
 	This method will set the wavelength to be as big as possible in the screen
@@ -358,17 +353,11 @@ class DataCollector_agilentDSA91304A:
 
 	def getTrace(self, inputChannel, fileWriter):
 		trace = self.driver._measurement_fetch_waveform(inputChannel)
-<<<<<<< HEAD
 		print("The trace has been fetched, now time to output it")
 		#f.write(trace)
 		#f.close()
                 fileWriter.writerows(trace)
                 print("Writing file completed")
-=======
-		#f = open(nameOfFile, 'w')
-		fileWriter.writerows(str(trace))
-		
->>>>>>> 4d43f1adead238f2a7aeaed64c39617efca3c550
 	"""
 	This simple method should be called at the end when the instrument is not to be used any longer
 	as it closes out all the files which if done incorrectly might result in unwritten files

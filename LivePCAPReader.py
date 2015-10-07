@@ -30,6 +30,8 @@ class DataContainer:
         self.pktLoss = 0; # Packet loss rate
         self.bitErr = 0; # Bit error rate
         self.appxErr = 0; # Appx error rate
+        self.zeropkts = 0; # Record packets with zero data
+        self.corruptPkts = 0;
         #self.errPos; # Array for bitwise op to find error pos
         #self.currPkt; # Current packet being analyses
 
@@ -51,22 +53,7 @@ class DataContainer:
         print( "Total bit errors: %d\n" % self.totBitErrs );
         #print( "Bit error rate: %d%%\n" % self.bitErr*100 );
 
-    def fillPktInfo(self, tpl):
-        # if statement so that first seq number is counted; otherwise will produce error.
-        if tpl[0] != self.FIRSTSEQNUM:
-            self.totPkts = (tpl[0] + tpl[1]) - self.FIRSTSEQNUM; # Latest sequence number
-        else:
-            self.totPkts = tpl[1];
-
-
-        self.totPktsReceived += tpl[1];
-        self.totPktsLost = self.totPkts - self.totPktsReceived;
-
-        try:
-            self.pktLoss = self.totPktsLost/self.totPkts;
-        except ZeroDivisionError:
-            self.pktLoss = self.pktLoss;
-
+    """
     def fillPktInfo_8091(self, tpl):
 
         # Used to record very first sequence number of trial. This is needed to calculate
@@ -97,16 +84,65 @@ class DataContainer:
                 self.pktLoss = round(float(self.totPktsLost)/float(self.totPkts)*float(100),2);
             except ZeroDivisionError:
                 pass;
-
+        else:
+            self.zeropkts += 1;
+        """
+        
+    # lst contains list of tuples (seqnum, # following seqnum) 
+    def fillPktInfo_8091(self, lst):
+        # Only process non-empty lists
+        if lst:
+            for tpl in lst:
+                if (tpl[0] == 0 and tpl[1] == 0):
+                    self.zeropkts += 1;
+                    #print tpl;
+                else:
+                    self.totPktsReceived += tpl[1];
+        """       
+        else:
+            self.zeropkts += 1;
+        """
+        
 
     def fillPktInfo_8092(self, ls):
+        self.totPktsLost += 1;
         self.totBitErrs += ls[0];
+      
+    """      
+    def fillPktInfo(self, tpl):
+        # if statement so that first seq number is counted; otherwise will produce error.
+        if tpl[0] != self.FIRSTSEQNUM:
+            self.totPkts = (tpl[0] + tpl[1]) - self.FIRSTSEQNUM; # Latest sequence number
+        else:
+            self.totPkts = tpl[1];
+
+
+        self.totPktsReceived += tpl[1];
+        self.totPktsLost = self.totPkts - self.totPktsReceived;
 
         try:
+            self.pktLoss = self.totPktsLost/self.totPkts;
+        except ZeroDivisionError:
+            self.pktLoss = self.pktLoss;
+    """
+    
+    def fillPktInfo_Corrupt(self):
+        self.corruptPkts += 1;
+    
+    def fillPktInfo(self):
+        # Fill in the rest of the data. Depends on info obtained from
+        # functions fillPktInfo_8091 & fillPktInfo_8092. This function
+        # assumes that the above mentioned functions have been called 
+        # beforehand.
+        self.totPkts = self.totPktsReceived + self.totPktsLost;
+        
+        
+        # Calculate packet loss rate
+        try:
+            self.pktLoss = round(float(self.totPktsLost)/float(self.totPkts)*float(100),2);
             self.bitErr = float(self.totBitErrs)/float(self.totPkts*float(996)*float(8)); # bit errors/total bits
         except ZeroDivisionError:
             pass;
-        
 
     # Write the state of the data to csv file
     def writeToFile(self, filename):
@@ -118,7 +154,9 @@ class DataContainer:
                 ['TotPktsLost', self.totPktsLost],\
                 ['PktLostRate', self.pktLoss],\
                 ['BitErrors', self.totBitErrs],\
-                ['BitErrorRate', self.bitErr]];
+                ['BitErrorRate', self.bitErr],\
+                ['ZeroPkts', self.zeropkts],\
+                ['CorruptPkts', self.corruptPkts]];
 
         writer.writerows(data);
         file.close();
@@ -134,6 +172,8 @@ class DataContainer:
         self.pktLoss = 0; # Packet loss rate
         self.bitErr = 0; # Bit error rate
         self.appxErr = 0; # Appx error rate
+        self.zeropkts = 0;
+        self.corruptPkts = 0;
 
 
 def prbs9(state = 0x1ff):
@@ -199,8 +239,11 @@ def parse_8091_packet(pkt):
         #print pktData[i:i+8].encode('hex');
         v = struct.unpack('>LL', pktData[i:i+8]);
 
+        """
         if v[1] > 0:
             lst.append(v);
+        """
+        lst.append(v);
 
     return lst;
 
@@ -414,10 +457,14 @@ def RunTrial(numpkts, iface, filename):
             # Prevent analysis on bad packet
             if info != None:
                 metaData.fillPktInfo_8091(info);
+                metaData.fillPktInfo();
 
         elif (etherproto == '8092' and len(pkt) == 1014):
             badinfo = parse_8092_packet(pkt);
             metaData.fillPktInfo_8092(badinfo);
+            metaData.fillPktInfo();
+        else:
+            metaData.fillPktInfo_Corrupt();
 
 
     # Write analysis to file
@@ -427,6 +474,63 @@ def RunTrial(numpkts, iface, filename):
     
     # Clear contents of data object to start a new fresh trial of data collection
     metaData.clearData();
+    
+    
+def RunErrors(iface, filename, duration):
+    # Construct tshark call string
+    tsharkArgs = " -i " + iface + " -a duration:" + duration + " -w " + filename + " -F pcap";
+
+    # Logfile must aleady exist before hand
+    os.mknod(filename);
+    os.system("sudo chmod 777 "+filename);
+    #time.sleep(0.1);
+
+    # Start wireshark and record logfile for n amount of time
+    #call(["tshark", tsharkArgs]);
+    os.system( "sudo tshark" + tsharkArgs );
+    #os.system("time tshark -i eth7 -a duration:10 -w test.pcap -F pcap")
+    
+    
+    # Open logfile for processing
+    pkts = rdpcap(filename);
+    metaData = DataContainer();
+
+    for pkt in pkts:
+        etherproto = get_packet_protocol(pkt);
+
+        # Pick respective prosessing methods based on etherprotocol.
+        # Also, do not process corrupted packets - packets not of correct byte size.
+        """
+        if (etherproto == '8091' and len(pkt) == 60):
+            info = parse_8091_packet(pkt);
+
+            
+            # Prevent analysis on bad packet
+            if info != None:
+                metaData.fillPktInfo_8091(info);
+                metaData.fillPktInfo();
+        """
+
+            # Pick respective prosessing methods based on etherprotocol.
+        # Also, do not process corrupted packets - packets not of correct byte size.
+        if (etherproto == '8091' and len(pkt) == 60):
+            info = parse_8091_packet(pkt);
+
+            # Prevent analysis on bad packet
+            if info != None:
+                metaData.fillPktInfo_8091(info);
+                metaData.fillPktInfo();
+
+        elif (etherproto == '8092' and len(pkt) == 1014):
+            badinfo = parse_8092_packet(pkt);
+            metaData.fillPktInfo_8092(badinfo);
+            metaData.fillPktInfo();
+        else:
+            metaData.fillPktInfo_Corrupt();            
+            
+                
+    fn = filename[:-5]; # Strip .pcap from filename string
+    metaData.writeToFile(fn+".csv");
 
 
 def StartPCAPReadDaemon(logfile):
