@@ -91,17 +91,11 @@ class DataContainer:
     # lst contains list of tuples (seqnum, # following seqnum) 
     def fillPktInfo_8091(self, lst):
         # Only process non-empty lists
-        if lst:
+        if lst and len(lst) > 0:
             for tpl in lst:
-                if (tpl[0] == 0 and tpl[1] == 0):
-                    self.zeropkts += 1;
-                    #print tpl;
-                else:
-                    self.totPktsReceived += tpl[1];
-        """       
+                self.totPktsReceived += tpl[1];
         else:
             self.zeropkts += 1;
-        """
         
 
     def fillPktInfo_8092(self, ls):
@@ -239,11 +233,9 @@ def parse_8091_packet(pkt):
         #print pktData[i:i+8].encode('hex');
         v = struct.unpack('>LL', pktData[i:i+8]);
 
-        """
         if v[1] > 0:
             lst.append(v);
-        """
-        lst.append(v);
+        #lst.append(v);
 
     return lst;
 
@@ -369,7 +361,7 @@ def processPkt (pkt, container):
     etherproto = get_packet_protocol(pkt);
     # Pick respective prosessing methods based on etherprotocol.
     # Also, do not process corrupted packets - packets not of correct byte size.
-    if (etherproto == '8091' and len(pkt) == 60):
+    if (etherproto == '8091'):
         info = parse_8091_packet(pkt);
 
         # Prevent analysis on bad packet
@@ -451,7 +443,7 @@ def RunTrial(numpkts, iface, filename):
 
         # Pick respective prosessing methods based on etherprotocol.
         # Also, do not process corrupted packets - packets not of correct byte size.
-        if (etherproto == '8091' and len(pkt) == 60):
+        if (etherproto == '8091'):
             info = parse_8091_packet(pkt);
 
             # Prevent analysis on bad packet
@@ -513,7 +505,7 @@ def RunErrors(iface, filename, duration):
 
             # Pick respective prosessing methods based on etherprotocol.
         # Also, do not process corrupted packets - packets not of correct byte size.
-        if (etherproto == '8091' and len(pkt) == 60):
+        if (etherproto == '8091'):
             info = parse_8091_packet(pkt);
 
             # Prevent analysis on bad packet

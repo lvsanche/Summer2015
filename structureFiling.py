@@ -288,15 +288,11 @@ class DataCollector_agilentDSA91304A:
 	"""
 	def captureScreenShot(self, titleOfScreenshot):
 		img = self.driver._display_fetch_screenshot()
-<<<<<<< HEAD
-		filePic = open(titleOfScreenshot,'w')
+                self.logFileWriter.writerow(['%s- Command: %s' %(time.strftime("%H:%M:%S"),"display_fetch_screenshot()" )])
+		filePic = open(self.directory+titleOfScreenshot+'.jpg','w')
 		time.sleep(2)
                 filePic.write(img)
                 time.sleep(2)
-=======
-		filePic = open(self.directory+titleOfScreenshot+".jpg",'w')
-		filePic.write(img)
->>>>>>> b53eb4e43e7e47422d95a450225b4aabcd58120e
 		filePic.close()
 		print("Screen shot captured")
 
